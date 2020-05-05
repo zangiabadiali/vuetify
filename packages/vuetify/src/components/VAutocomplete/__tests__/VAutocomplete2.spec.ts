@@ -56,6 +56,7 @@ describe('VAutocomplete.ts', () => {
     const wrapper = mountFunction({
       propsData: {
         chips: true,
+        clearable: true,
         multiple: true,
         items: [
           { text: 'foo', value: 'foo', disabled: true },
