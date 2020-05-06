@@ -98,9 +98,11 @@ describe('activatable.ts', () => {
     const btn = wrapper.find('button')
 
     btn.trigger('mouseenter')
+    expect(wrapper.vm.isMouseover).toBe(true)
     expect(runDelay).toHaveBeenLastCalledWith('open')
 
     btn.trigger('mouseleave')
+    expect(wrapper.vm.isMouseover).toBe(false)
     expect(runDelay).toHaveBeenLastCalledWith('close')
   })
 

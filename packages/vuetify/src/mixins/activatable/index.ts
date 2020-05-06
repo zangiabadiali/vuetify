@@ -36,6 +36,7 @@ export default baseMixins.extend({
     activatorElement: null as HTMLElement | null,
     activatorNode: [] as VNode[],
     events: ['click', 'mouseenter', 'mouseleave'],
+    isMouseover: false,
     listeners: {} as Record<string, (e: MouseEvent & KeyboardEvent) => void>,
   }),
 
@@ -97,10 +98,12 @@ export default baseMixins.extend({
 
       if (this.openOnHover) {
         listeners.mouseenter = (e: MouseEvent) => {
+          this.isMouseover = true
           this.getActivator(e)
           this.runDelay('open')
         }
         listeners.mouseleave = (e: MouseEvent) => {
+          this.isMouseover = false
           this.getActivator(e)
           this.runDelay('close')
         }

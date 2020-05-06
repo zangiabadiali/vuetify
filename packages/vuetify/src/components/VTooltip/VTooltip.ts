@@ -166,10 +166,14 @@ export default mixins(Colorable, Delayable, Dependent, Detachable, Menuable, Tog
       const listeners = Activatable.options.methods.genActivatorListeners.call(this)
 
       listeners.focus = (e: Event) => {
+        if (this.isMouseover) return
+
         this.getActivator(e)
         this.runDelay('open')
       }
       listeners.blur = (e: Event) => {
+        if (this.isMouseover) return
+
         this.getActivator(e)
         this.runDelay('close')
       }
