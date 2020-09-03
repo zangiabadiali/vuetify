@@ -74,28 +74,28 @@
     },
 
     watch: {
-      initializing: {
-        immediate: true,
-        async handler (val) {
-          if (
-            val ||
-            this.hasRecentlyViewed
-          ) return
+      // initializing: {
+      //   immediate: true,
+      //   async handler (val) {
+      //     if (
+      //       val ||
+      //       this.hasRecentlyViewed
+      //     ) return
 
-          await wait(3000)
+      //     await wait(3000)
 
-          const snackbar = this.notifications.find(notification => {
-            return !this.unotifications.includes(notification.slug)
-          })
+      //     const snackbar = this.notifications.find(notification => {
+      //       return !this.unotifications.includes(notification.slug)
+      //     })
 
-          if (!snackbar) return
+      //     if (!snackbar) return
 
-          this.snackbar = {
-            slug: snackbar.slug,
-            ...snackbar.metadata,
-          }
-        },
-      },
+      //     this.snackbar = {
+      //       slug: snackbar.slug,
+      //       ...snackbar.metadata,
+      //     }
+      //   },
+      // },
       snackbar (val) {
         if (!val.slug) return
 

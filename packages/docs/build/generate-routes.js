@@ -10,8 +10,8 @@ require('dotenv').config({ path: resolve('../.env.local') })
 const languages = process.env.EN_LOCALE_ONLY === 'true'
   ? ['en']
   : require('../src/i18n/locales')
-      .map(lang => lang.locale)
-      .filter(lang => lang !== 'eo-UY')
+    .map(lang => lang.locale)
+    .filter(lang => lang !== 'eo-UY')
 
 function genRoutes (data, prefix) {
   const files = glob.sync(data)
@@ -25,7 +25,7 @@ function genRoutes (data, prefix) {
       .map(i => kebabCase(i.replace(/md/, '')).toLowerCase())
       .join('/')
 
-    if (route === 'home') continue
+    // if (route === 'home') continue
     paths.push(`/${prefix}${route}/`)
   }
 
@@ -49,11 +49,11 @@ function genDemos () {
 }
 
 const paths = [
-  ...genRoutes(DATA_PATH_DOC_FILES, ''),
-  ...genRoutes(DATA_PATH_API_FILES, 'api/'),
-  ...genDemos(),
+  ...genRoutes(DATA_PATH_DOC_FILES, '').slice(1, 5),
+  // ...genRoutes(DATA_PATH_API_FILES, 'api/'),
+  // ...genDemos(),
 ]
-const routes = [{ locale: '', path: '', fullPath: '/' }]
+const routes = []
 
 for (const locale of languages) {
   for (const path of paths) {

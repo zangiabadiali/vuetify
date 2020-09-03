@@ -12,12 +12,12 @@
         key="loader"
       />
 
-      <keep-alive
+      <!-- <keep-alive
         v-else
         max="3"
-      >
-        <component :is="component" />
-      </keep-alive>
+      > -->
+      <component :is="component" :key="page" />
+      <!-- </keep-alive> -->
     </v-responsive>
   </v-container>
 </template>
@@ -27,11 +27,50 @@
   import { error } from '@/util/routes'
   import { genMetaData } from '@/util/metadata'
   import { get, sync } from 'vuex-pathify'
-  import { waitForReadystate } from '@/util/helpers'
+  import { wait, waitForReadystate } from '@/util/helpers'
   import { localeLookup } from '@/i18n/util'
+
+  async function load (route) {
+    const { category, locale, page } = route.params
+
+    const isApi = category === 'api'
+    const namespace = isApi ? 'api' : 'pages'
+    const path = [namespace, localeLookup(locale)]
+
+    if (!isApi && category) path.push(category)
+
+    path.push(!category ? 'home' : page)
+
+    try {
+      return import(
+        /* webpackChunkName: "documentation-[request]" */
+        `@/${path.join('/')}.md`
+      )
+    } catch (e) {
+      return error()
+    }
+  }
 
   export default {
     name: 'DocumentationView',
+
+    async beforeRouteEnter (to, from, next) {
+      const md = await load(to)
+
+      next(async vm => {
+        const {
+          attributes = {},
+          toc = [],
+          vue = {},
+        } = md
+
+        vue.component.name = vm.page
+
+        vm.frontmatter = attributes
+        vm.toc = toc
+        vm.component = vue.component
+      })
+    },
 
     metaInfo () {
       // Check it fm exists
@@ -70,78 +109,6 @@
         'params@page',
       ]),
       initializing: sync('app/initializing'),
-    },
-
-    async created () {
-      this.initializing = new Promise(this.init)
-    },
-
-    async mounted () {
-      await waitForReadystate()
-      await this.initializing
-
-      if (this.loading.length) {
-        await Promise.all(this.loading)
-
-        this.loading = []
-      }
-
-      if (this.hash) {
-        await this.$router.options.scrollBehavior({ hash: this.hash })
-      }
-
-      this.initializing = false
-    },
-
-    methods: {
-      load () {
-        const isApi = this.category === 'api'
-        const namespace = isApi ? 'api' : 'pages'
-        const path = [namespace, localeLookup(this.locale)]
-
-        if (!isApi) path.push(this.category)
-
-        path.push(this.page)
-
-        return import(
-          /* webpackChunkName: "documentation-[request]" */
-          `@/${path.join('/')}.md`
-        )
-      },
-      async init (resolve, reject) {
-        let structure
-
-        try {
-          structure = await this.load()
-        } catch (e) {
-          console.log(e)
-
-          const component = await error()
-
-          this.component = component.default
-
-          reject(e)
-
-          return
-        }
-
-        const {
-          attributes = {},
-          toc = [],
-          vue = {},
-        } = structure
-
-        vue.component.name = this.page
-
-        this.frontmatter = attributes
-        this.toc = toc
-        this.component = vue.component
-
-        resolve()
-      },
-      async reset () {
-        this.component = undefined
-      },
     },
   }
 </script>

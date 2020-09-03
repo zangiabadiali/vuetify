@@ -23,7 +23,7 @@ module.exports = config => {
   //   .use('vue-loader')
   //   .tap(options => {
   //     options.optimizeSSR = false
-  //
+
   //     return options
   //   })
 

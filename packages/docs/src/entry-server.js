@@ -18,64 +18,18 @@ global.fetch = require('node-fetch')
 export default context => {
   /* eslint-disable-next-line no-async-promise-executor */
   return new Promise(async (resolve, reject) => {
-    const s = IS_PROD && Date.now()
-
-    let app
-    let router
-    let store
-
     try {
-      const res = await createApp(undefined, context)
+      await createApp(({ app, router, store }) => {
+        router.push(context.url)
 
-      app = res.app
-      router = res.router
-      store = res.store
+        context.meta = app.$meta()
+
+        router.onReady(() => resolve(app))
+      }, context)
     } catch (e) {
       console.log('error in server try')
 
       reject(e)
     }
-
-    // set router's location
-    router.push(context.url)
-
-    // wait until router has resolved possible async hooks
-    router.onReady(() => {
-      const matchedComponents = router.getMatchedComponents()
-
-      // Call fetchData hooks on components matched by the route.
-      // A preFetch hook dispatches a store action and returns a Promise,
-      // which is resolved when the action is complete and store state has been
-      // updated.
-      Promise.all(
-        matchedComponents.map(async c => {
-          try {
-            await c.asyncData({
-              route: router.currentRoute,
-              store,
-            })
-          } catch (e) {
-            return Promise.resolve(e)
-          }
-        }),
-      ).then(() => {
-        // After all preFetch hooks are resolved, our store is now
-        // filled with the state needed to render the app.
-        // Expose the state on the render context, and let the request handler
-        // inline the state in the HTML response. This allows the client-side
-        // store to pick-up the server-side state without having to duplicate
-        // the initial data fetching on the client.
-        context.state = store.state
-
-        // Inject vue-meta into template
-        context.meta = app.$meta()
-
-        resolve(app)
-      }).catch(e => {
-        console.log('missing route break server')
-
-        reject(e)
-      })
-    }, reject)
   })
 }

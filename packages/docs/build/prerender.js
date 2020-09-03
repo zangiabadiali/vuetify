@@ -24,7 +24,7 @@ const resolve = file => path.resolve(__dirname, file)
 function readFile (file) {
   return fs.readFileSync(resolve(file), 'utf-8')
 }
-const writeFile = util.promisify(fs.writeFile)
+const writeFile = fs.promises.writeFile
 
 /**
  * Call cb for each item in arr, waiting for a returned
@@ -66,86 +66,28 @@ function onMessage ({ message, error, lastFile, time }) {
   }
 }
 
-function render ({ routes, template, bundle, clientManifest }) {
-  const renderer = createBundleRenderer(bundle, {
-    runInNewContext: false,
-    clientManifest,
-    shouldPrefetch: () => false,
-    template,
-  })
+// const routes = require('./generate-routes')
+const template = readFile('../src/ssr.template.html')
+const bundle = JSON.parse(readFile('../dist/vue-ssr-server-bundle.json'))
+const clientManifest = JSON.parse(readFile('../dist/vue-ssr-client-manifest.json'))
 
-  // Redirect console.log to the main thread
-  let currentRoute
-  if (!isMainThread) {
-    const write = process.stdout.write
-    process.stdout.write = data => {
-      parentPort.postMessage({
-        message: '\n' + currentRoute.fullPath + '\n' + data.toString(),
-      })
-      return write.call(process.stdout, data)
-    }
-  }
+const renderer = createBundleRenderer(bundle, {
+  runInNewContext: true,
+  clientManifest,
+  shouldPrefetch: () => false,
+  template,
+})
 
-  return forEachSequential(routes, route => {
-    currentRoute = route
-    const start = performance.now()
+renderer.renderToString({
+  url: '/',
+  lang: 'en',
+  meta: {},
+}).then(html => {
+  writeFile(
+    resolve('../dist/test.html'),
+    html,
+    { encoding: 'utf-8' }
+  ).then(() => process.exit(0))
+})
 
-    const context = {
-      hostname: 'https://vuetifyjs.com', // TODO
-      hreflangs: availableLanguages.reduce((acc, lang) => {
-        const href = path.normalize(`/${lang}/${route.path}`)
-        return acc + `<link rel="alternate" hreflang="${lang}" href="${href}">`
-      }, ''),
-      lang: route.locale,
-      scripts: '',
-      url: route.fullPath,
-    }
-
-    return renderer.renderToString(context).then(html => {
-      const dir = path.join('./dist/', route.fullPath)
-
-      return mkdirp(dir).then(() =>
-        writeFile(path.join(dir, 'index.html'), html, { encoding: 'utf-8' }),
-      ).then(() => {
-        postMessage({
-          lastFile: route.fullPath,
-          time: Math.round(performance.now() - start),
-        })
-      })
-    }).catch(err => {
-      postMessage({
-        error: err.stack,
-        lastFile: route.fullPath,
-        time: Math.round(performance.now() - start),
-      })
-    })
-  })
-}
-
-if (isMainThread) {
-  const routes = require('./generate-routes')
-  const template = readFile('../src/ssr.template.html')
-  const bundle = JSON.parse(readFile('../dist/vue-ssr-server-bundle.json'))
-  const clientManifest = JSON.parse(readFile('../dist/vue-ssr-client-manifest.json'))
-
-  bar = new ProgressBar('[:bar] :percent | ETA: :etas | :current/:total | :timems | :lastFile', {
-    total: routes.length,
-    width: 64,
-  })
-
-  if (process.env.NODE_ENV === 'debug') {
-    render({ routes, template, bundle, clientManifest })
-  } else {
-    const chunkSize = Math.ceil(routes.length / threads)
-    chunk(routes, chunkSize).forEach(routes => {
-      const worker = new Worker(__filename, {
-        workerData: { routes, template, bundle, clientManifest },
-        stdout: true,
-      })
-
-      worker.on('message', onMessage)
-    })
-  }
-} else {
-  render(workerData).then(() => process.exit(0))
-}
+// render({ routes, template, bundle, clientManifest }).then(() => process.exit(0))
