@@ -3,7 +3,7 @@ import { computed, isRef, ref, toRef } from 'vue'
 import { isCssColor } from '@/util/colorUtils'
 
 // Types
-import type { Ref, CSSProperties, UnwrapRef } from 'vue'
+import type { Ref, CSSProperties, UnwrapRef, MaybeRef } from 'vue'
 
 type ColorValue = string | null | undefined
 
@@ -12,19 +12,27 @@ interface ColorData {
   readonly colorStyles: Ref<null | CSSProperties>
 }
 
-export function useColor (color: Ref<ColorValue>, isBackground?: boolean | Ref<boolean>): ColorData
-export function useColor<T extends Record<K, string | null | undefined>, K extends string> (
+export function useColor (color: Ref<ColorValue>, isBackground?: MaybeRef<boolean>): ColorData
+export function useColor<T extends Record<K, ColorValue>, K extends string> (
   props: T,
   name: K,
-  isBackground?: boolean | Ref<boolean>,
+  isBackground?: MaybeRef<boolean>,
 ): ColorData
-export function useColor<T extends Record<K, string | null | undefined>, K extends string> (
+export function useColor<T extends Record<K, ColorValue>, K extends string> (
   props: T | Ref<ColorValue>,
-  name?: K | boolean | Ref<boolean>,
-  isBackground: boolean | Ref<boolean> = false,
+  name?: K | MaybeRef<boolean>,
+  isBackground: MaybeRef<boolean> = false,
 ): ColorData {
-  const background = ref(isRef(props) ? name as boolean : isBackground)
-  const color = isRef(props) ? props : (name ? toRef(props, name as K) : null)
+  let background: Ref<boolean>
+  let color: Ref<ColorValue> | null
+
+  if (isRef(props)) {
+    background = ref(name as MaybeRef<boolean>)
+    color = props
+  } else {
+    background = ref(isBackground)
+    color = name ? toRef(props, name as K) : null
+  }
 
   const data = computed(() => {
     const data: UnwrapRef<Writable<ColorData>> = {

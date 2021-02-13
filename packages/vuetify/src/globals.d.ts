@@ -75,6 +75,11 @@ declare global {
   }
 }
 
+declare module 'vue' {
+  // https://github.com/vuejs/vue-next/issues/1366
+  export type MaybeRef<T> = T | Ref<T>
+}
+
 declare module '@vue/runtime-core' {
   export interface ComponentInternalInstance {
     ctx: Record<string, unknown>
