@@ -50,9 +50,7 @@ export default defineComponent({
       return isContained.value && !(props.disabled || props.flat)
     })
 
-    const { colorClasses, colorStyles } = useColor(computed(() => ({
-      [isContained.value ? 'background' : 'text']: props.color,
-    })))
+    const { colorClasses, colorStyles } = useColor(props, 'color', isContained)
 
     return () => (
       <props.tag

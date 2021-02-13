@@ -1,60 +1,31 @@
 // Composables
-import { useBackgroundColor, useColor, useTextColor } from '../color'
+import { useColor } from '../color'
 
 // Utilities
-import { reactive, ref, toRef } from 'vue'
+import { reactive, toRef } from 'vue'
 
-describe('color.ts', () => {
-  describe('useColor', () => {
-    it('should return correct data', () => {
-      const colors = ref<{ background?: string | null, text?: string | null }>({
-        background: 'primary',
-        text: 'secondary',
-      })
-
-      const data = useColor(colors)
-      expect(data.colorClasses.value).toEqual(['bg-primary', 'text-secondary'])
-      expect(data.colorStyles.value).toEqual({})
-
-      colors.value.text = null
-      expect(data.colorClasses.value).toEqual(['bg-primary'])
-      expect(data.colorStyles.value).toEqual({})
-
-      colors.value.background = '#ff00ff'
-      expect(data.colorClasses.value).toEqual([])
-      expect(data.colorStyles.value).toEqual({
-        'background-color': '#ff00ff',
-      })
-
-      colors.value.text = 'primary'
-      expect(data.colorClasses.value).toEqual(['text-primary'])
-      expect(data.colorStyles.value).toEqual({
-        'background-color': '#ff00ff',
-      })
-    })
-  })
-
-  describe('useTextColor', () => {
+describe('useColor', () => {
+  describe('text', () => {
     it('should return correct data', () => {
       const props = reactive({
         color: null as string | null,
       })
-      const data = useTextColor(props, 'color')
-      expect(data.textColorClasses.value).toEqual([])
-      expect(data.textColorStyles.value).toEqual({})
+      const data = useColor(props, 'color')
+      expect(data.colorClasses.value).toBeNull()
+      expect(data.colorStyles.value).toBeNull()
 
       props.color = 'primary'
-      expect(data.textColorClasses.value).toEqual(['text-primary'])
-      expect(data.textColorStyles.value).toEqual({})
+      expect(data.colorClasses.value).toEqual('text-primary')
+      expect(data.colorStyles.value).toBeNull()
 
       props.color = ''
-      expect(data.textColorClasses.value).toEqual([])
-      expect(data.textColorStyles.value).toEqual({})
+      expect(data.colorClasses.value).toBeNull()
+      expect(data.colorStyles.value).toBeNull()
 
       props.color = '#ff00ff'
-      expect(data.textColorClasses.value).toEqual([])
-      expect(data.textColorStyles.value).toEqual({
-        'caret-color': '#ff00ff',
+      expect(data.colorClasses.value).toBeNull()
+      expect(data.colorStyles.value).toEqual({
+        caretColor: '#ff00ff',
         color: '#ff00ff',
       })
     })
@@ -63,34 +34,34 @@ describe('color.ts', () => {
       const props = reactive({
         color: 'primary',
       })
-      const data = useTextColor(toRef(props, 'color'))
+      const data = useColor(toRef(props, 'color'))
 
-      expect(data.textColorClasses.value).toEqual(['text-primary'])
-      expect(data.textColorStyles.value).toEqual({})
+      expect(data.colorClasses.value).toEqual('text-primary')
+      expect(data.colorStyles.value).toBeNull()
     })
   })
 
-  describe('useBackgroundColor', () => {
+  describe('background', () => {
     it('should return correct data', () => {
       const props = reactive({
         bg: null as string | null,
       })
-      const data = useBackgroundColor(props, 'bg')
-      expect(data.backgroundColorClasses.value).toEqual([])
-      expect(data.backgroundColorStyles.value).toEqual({})
+      const data = useColor(props, 'bg', true)
+      expect(data.colorClasses.value).toBeNull()
+      expect(data.colorStyles.value).toBeNull()
 
       props.bg = 'primary'
-      expect(data.backgroundColorClasses.value).toEqual(['bg-primary'])
-      expect(data.backgroundColorStyles.value).toEqual({})
+      expect(data.colorClasses.value).toEqual('bg-primary')
+      expect(data.colorStyles.value).toBeNull()
 
       props.bg = ''
-      expect(data.backgroundColorClasses.value).toEqual([])
-      expect(data.backgroundColorStyles.value).toEqual({})
+      expect(data.colorClasses.value).toBeNull()
+      expect(data.colorStyles.value).toBeNull()
 
       props.bg = '#ff00ff'
-      expect(data.backgroundColorClasses.value).toEqual([])
-      expect(data.backgroundColorStyles.value).toEqual({
-        'background-color': '#ff00ff',
+      expect(data.colorClasses.value).toBeNull()
+      expect(data.colorStyles.value).toEqual({
+        backgroundColor: '#ff00ff',
       })
     })
 
@@ -98,10 +69,10 @@ describe('color.ts', () => {
       const props = reactive({
         color: 'primary',
       })
-      const data = useBackgroundColor(toRef(props, 'color'))
+      const data = useColor(toRef(props, 'color'), true)
 
-      expect(data.backgroundColorClasses.value).toEqual(['bg-primary'])
-      expect(data.backgroundColorStyles.value).toEqual({})
+      expect(data.colorClasses.value).toEqual('bg-primary')
+      expect(data.colorStyles.value).toBeNull()
     })
   })
 })
